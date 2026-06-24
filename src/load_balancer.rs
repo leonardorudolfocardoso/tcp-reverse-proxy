@@ -1,6 +1,7 @@
 use std::fmt;
 use std::sync::atomic::AtomicUsize;
 
+#[derive(Debug)]
 struct Backend {
     address: String,
     healthy: bool,
@@ -21,6 +22,7 @@ impl fmt::Display for LoadBalancerError {
 
 impl std::error::Error for LoadBalancerError {}
 
+#[derive(Debug)]
 pub struct LoadBalancer {
     backends: Vec<Backend>,
     counter: AtomicUsize,
@@ -50,18 +52,19 @@ impl LoadBalancer {
     }
 
     pub fn next(&self) -> Option<String> {
-        let next = self
-            .counter
-            .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
-            % self.backends.len();
+        for _ in 0..self.backends.len() {
+            let next = self
+                .counter
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+                % self.backends.len();
 
-        self.backends
-            .iter()
-            .cycle()
-            .skip(next)
-            .take(self.backends.len())
-            .find(|backend| backend.healthy)
-            .map(|backend| backend.address.clone())
+            let backend = &self.backends[next];
+
+            if backend.healthy {
+                return Some(backend.address.clone());
+            }
+        }
+        None
     }
 
     pub fn set_backend_health(&mut self, address: &str, healthy: bool) {
@@ -104,5 +107,19 @@ mod tests {
         load_balancer.set_backend_health("server-b", false);
 
         assert!(load_balancer.next().is_none());
+    }
+
+    #[test]
+    fn dont_return_an_unhealthy_backend() {
+        let mut load_balancer =
+            LoadBalancer::try_from_iter(["server-a", "server-b", "server-c"]).unwrap();
+        load_balancer.set_backend_health("server-b", false);
+
+        dbg!(&load_balancer);
+
+        assert_eq!(load_balancer.next(), Some("server-a".to_owned()));
+        assert_eq!(load_balancer.next(), Some("server-c".to_owned()));
+        assert_eq!(load_balancer.next(), Some("server-a".to_owned()));
+        assert_eq!(load_balancer.next(), Some("server-c".to_owned()));
     }
 }
