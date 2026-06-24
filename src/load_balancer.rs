@@ -120,4 +120,19 @@ mod tests {
         assert_eq!(load_balancer.next(), Some("server-a".to_owned()));
         assert_eq!(load_balancer.next(), Some("server-c".to_owned()));
     }
+
+    #[test]
+    fn restore_backend_health() {
+        let mut load_balancer =
+            LoadBalancer::try_from_iter(["server-a", "server-b", "server-c"]).unwrap();
+        load_balancer.set_backend_health("server-b", false);
+
+        assert_eq!(load_balancer.next(), Some("server-a".to_owned()));
+        assert_eq!(load_balancer.next(), Some("server-c".to_owned()));
+
+        load_balancer.set_backend_health("server-b", true);
+        assert_eq!(load_balancer.next(), Some("server-a".to_owned()));
+        assert_eq!(load_balancer.next(), Some("server-b".to_owned()));
+        assert_eq!(load_balancer.next(), Some("server-c".to_owned()));
+    }
 }
