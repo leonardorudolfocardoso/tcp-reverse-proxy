@@ -6,6 +6,6 @@ edition = "2024"
 [dependencies]
 features = "0.10.0"
 rt = "0.19.1"
-tokio = { version = "1.52.3", features = ["rt", "macros", "net", "io-util"] }
+tokio = { version = "1.52.3", features = ["rt", "macros", "net", "io-util", "sync"] }
 tokio-rustls = "0.26.4"
 webpki-roots = "1.0.8"
