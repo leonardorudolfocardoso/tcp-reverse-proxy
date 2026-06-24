@@ -1,4 +1,4 @@
-use tcp_reverse_proxy::{LoadBalancer, proxy};
+use tcp_reverse_proxy::{load_balancer::LoadBalancer, proxy};
 use tokio::net::TcpListener;
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync>;
@@ -11,7 +11,10 @@ async fn main() -> std::result::Result<(), BoxedError> {
 
     loop {
         let (client, _) = listener.accept().await?;
-        let server = load_balancer.next();
+        let Some(server) = load_balancer.next() else {
+            eprintln!("no healthy backend available");
+            continue;
+        };
 
         tokio::task::spawn(async move {
             if let Err(err) = proxy(client, &server).await {

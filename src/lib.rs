@@ -5,7 +5,7 @@ use tokio::{
     net::TcpStream,
 };
 
-mod load_balancer;
+pub mod load_balancer;
 
 pub async fn proxy(mut client: TcpStream, server: &str) -> Result<u64, io::Error> {
     let mut upstream = TcpStream::connect(server).await?;
