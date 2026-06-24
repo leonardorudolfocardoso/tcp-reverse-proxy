@@ -7,9 +7,7 @@ use tokio::{
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync>;
 
-fn recover_unhealthy_backends(
-    load_balancer: Arc<Mutex<LoadBalancer>>,
-) -> tokio::task::JoinHandle<()> {
+fn recover_unhealthy_backends(load_balancer: Arc<Mutex<LoadBalancer>>) {
     tokio::task::spawn(async move {
         loop {
             tokio::time::sleep(Duration::from_secs(5)).await;
@@ -33,7 +31,7 @@ fn recover_unhealthy_backends(
                 }
             }
         }
-    })
+    });
 }
 
 #[tokio::main(flavor = "current_thread")]
