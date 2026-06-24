@@ -1,8 +1,40 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 use tcp_reverse_proxy::{ProxyError, load_balancer::LoadBalancer, proxy};
-use tokio::{net::TcpListener, sync::Mutex};
+use tokio::{
+    net::{TcpListener, TcpStream},
+    sync::Mutex,
+};
 
 type BoxedError = Box<dyn std::error::Error + Send + Sync>;
+
+fn recover_unhealthy_backends(
+    load_balancer: Arc<Mutex<LoadBalancer>>,
+) -> tokio::task::JoinHandle<()> {
+    tokio::task::spawn(async move {
+        loop {
+            tokio::time::sleep(Duration::from_secs(5)).await;
+
+            let unhealthy_addresses: Vec<String> = {
+                load_balancer
+                    .lock()
+                    .await
+                    .unhealthy_addresses()
+                    .map(str::to_owned)
+                    .collect()
+            };
+
+            for address in unhealthy_addresses {
+                if TcpStream::connect(&address).await.is_ok() {
+                    load_balancer
+                        .lock()
+                        .await
+                        .set_backend_health(&address, true);
+                    eprintln!("backend {address} is healthy again");
+                }
+            }
+        }
+    })
+}
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> std::result::Result<(), BoxedError> {
@@ -12,6 +44,8 @@ async fn main() -> std::result::Result<(), BoxedError> {
         "localhost:3002",
         "localhost:3003",
     ])?));
+
+    recover_unhealthy_backends(load_balancer.clone());
 
     loop {
         let (client, _) = listener.accept().await?;

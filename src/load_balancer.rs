@@ -72,6 +72,13 @@ impl LoadBalancer {
             backend.healthy = healthy;
         }
     }
+
+    pub fn unhealthy_addresses(&self) -> impl Iterator<Item = &str> {
+        self.backends
+            .iter()
+            .filter(|b| !b.healthy)
+            .map(|b| b.address.as_str())
+    }
 }
 
 #[cfg(test)]
@@ -129,10 +136,27 @@ mod tests {
 
         assert_eq!(load_balancer.next(), Some("server-a".to_owned()));
         assert_eq!(load_balancer.next(), Some("server-c".to_owned()));
+        assert_eq!(load_balancer.next(), Some("server-a".to_owned()));
+        assert_eq!(load_balancer.next(), Some("server-c".to_owned()));
 
         load_balancer.set_backend_health("server-b", true);
         assert_eq!(load_balancer.next(), Some("server-a".to_owned()));
         assert_eq!(load_balancer.next(), Some("server-b".to_owned()));
         assert_eq!(load_balancer.next(), Some("server-c".to_owned()));
+        assert_eq!(load_balancer.next(), Some("server-a".to_owned()));
+        assert_eq!(load_balancer.next(), Some("server-b".to_owned()));
+        assert_eq!(load_balancer.next(), Some("server-c".to_owned()));
+    }
+
+    #[test]
+    fn unhealthy_addresses() {
+        let mut load_balancer =
+            LoadBalancer::try_from_iter(["server-a", "server-b", "server-c"]).unwrap();
+        load_balancer.set_backend_health("server-b", false);
+        load_balancer.set_backend_health("server-c", false);
+
+        let unhealthies: Vec<_> = load_balancer.unhealthy_addresses().collect();
+
+        assert_eq!(unhealthies, vec!["server-b", "server-c",]);
     }
 }
