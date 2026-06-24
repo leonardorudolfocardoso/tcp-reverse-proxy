@@ -25,13 +25,6 @@ pub struct LoadBalancer {
 }
 
 impl LoadBalancer {
-    fn new(backends: Vec<String>) -> LoadBalancer {
-        LoadBalancer {
-            backends,
-            counter: AtomicUsize::new(0),
-        }
-    }
-
     pub fn try_from_iter<'a, T>(iter: T) -> Result<LoadBalancer, LoadBalancerError>
     where
         T: IntoIterator<Item = &'a str>,
@@ -42,7 +35,10 @@ impl LoadBalancer {
             return Err(LoadBalancerError::EmptyBackends);
         }
 
-        Ok(Self::new(backends))
+        Ok(Self {
+            backends,
+            counter: AtomicUsize::new(0),
+        })
     }
 
     pub fn next(&self) -> String {
