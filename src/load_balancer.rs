@@ -115,8 +115,6 @@ mod tests {
             LoadBalancer::try_from_iter(["server-a", "server-b", "server-c"]).unwrap();
         load_balancer.set_backend_health("server-b", false);
 
-        dbg!(&load_balancer);
-
         assert_eq!(load_balancer.next(), Some("server-a".to_owned()));
         assert_eq!(load_balancer.next(), Some("server-c".to_owned()));
         assert_eq!(load_balancer.next(), Some("server-a".to_owned()));
