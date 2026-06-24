@@ -10,7 +10,8 @@ local backend servers in round-robin order:
 - `localhost:3003`
 
 Each backend can serve a simple static `index.html` from the included
-`server1`, `server2`, and `server3` directories.
+`examples/static-backends/server1`, `examples/static-backends/server2`, and
+`examples/static-backends/server3` directories.
 
 ## Current Behavior
 
@@ -34,9 +35,9 @@ Python's built-in HTTP server works well for local testing.
 Start the three sample backend servers in separate terminals:
 
 ```sh
-python3 -m http.server 3001 --directory server1
-python3 -m http.server 3002 --directory server2
-python3 -m http.server 3003 --directory server3
+python3 -m http.server 3001 --directory examples/static-backends/server1
+python3 -m http.server 3002 --directory examples/static-backends/server2
+python3 -m http.server 3003 --directory examples/static-backends/server3
 ```
 
 Then start the proxy:
@@ -78,12 +79,14 @@ rejection.
 ├── src
 │   ├── lib.rs
 │   └── main.rs
-├── server1
-│   └── index.html
-├── server2
-│   └── index.html
-└── server3
-    └── index.html
+└── examples
+    └── static-backends
+        ├── server1
+        │   └── index.html
+        ├── server2
+        │   └── index.html
+        └── server3
+            └── index.html
 ```
 
 ## Limitations
