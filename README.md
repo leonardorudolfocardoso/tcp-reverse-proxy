@@ -32,12 +32,10 @@ Python's built-in HTTP server works well for local testing.
 
 ## Running Locally
 
-Start the three sample backend servers in separate terminals:
+Start the three sample backend servers:
 
 ```sh
-python3 -m http.server 3001 --directory examples/static-backends/server1
-python3 -m http.server 3002 --directory examples/static-backends/server2
-python3 -m http.server 3003 --directory examples/static-backends/server3
+make example
 ```
 
 Then start the proxy:
@@ -76,6 +74,7 @@ rejection.
 ```text
 .
 ├── Cargo.toml
+├── Makefile
 ├── src
 │   ├── lib.rs
 │   └── main.rs
