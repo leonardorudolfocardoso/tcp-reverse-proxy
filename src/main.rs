@@ -7,7 +7,7 @@ type BoxedError = Box<dyn std::error::Error + Send + Sync>;
 async fn main() -> std::result::Result<(), BoxedError> {
     let listener = TcpListener::bind("127.0.0.1:8080").await?;
     let load_balancer =
-        LoadBalancer::from_iter(["localhost:3001", "localhost:3002", "localhost:3003"]);
+        LoadBalancer::try_from_iter(["localhost:3001", "localhost:3002", "localhost:3003"])?;
 
     loop {
         let (client, _) = listener.accept().await?;
